@@ -1,6 +1,6 @@
 # Development Guidelines for AI-Assisted Programming
 
-**Comprehensive CLAUDE.md guidelines + enforcement agents for Test-Driven Development, TypeScript strict mode, and functional programming.**
+**Comprehensive CLAUDE.md guidelines + enforcement agents for Test-Driven Development, TypeScript strict mode, Go best practices, Rust idioms, and functional programming.**
 
 [![Watch me use my CLAUDE.md file to build a real feature](https://img.youtube.com/vi/rSoeh6K5Fqo/0.jpg)](https://www.youtube.com/watch?v=rSoeh6K5Fqo)
 
@@ -30,8 +30,8 @@ A comprehensive **development framework for AI-assisted programming** with Claud
 This repository provides:
 
 - **[CLAUDE.md](claude/.claude/CLAUDE.md)** - Core development principles (~100 lines)
-- **[Skills](claude/.claude/skills/)** - 10 auto-discovered skill patterns loaded on-demand
-- **[Nine enforcement agents](claude/.claude/agents/)** - Automated quality enforcement
+- **[Skills](claude/.claude/skills/)** - 17 auto-discovered skill patterns loaded on-demand
+- **[Eleven enforcement agents](claude/.claude/agents/)** - Automated quality enforcement
 
 ---
 
@@ -69,6 +69,8 @@ Unlike typical style guides, CLAUDE.md provides:
 | **Front-End Testing** | DOM Testing Library patterns, accessibility-first queries, userEvent best practices (framework-agnostic) | [→ skills/front-end-testing](claude/.claude/skills/front-end-testing/SKILL.md) |
 | **React Testing** | React Testing Library patterns for components, hooks, context, and forms | [→ skills/react-testing](claude/.claude/skills/react-testing/SKILL.md) |
 | **TypeScript Guidelines** | Schema-first decision framework, type vs interface clarity, immutability patterns | [→ skills/typescript-strict](claude/.claude/skills/typescript-strict/SKILL.md) |
+| **Go Guidelines** | Error handling, small interfaces, context propagation, concurrency patterns | [→ skills/go-strict](claude/.claude/skills/go-strict/SKILL.md) |
+| **Rust Guidelines** | Ownership patterns, error handling with Result, traits, async/await concurrency | [→ skills/rust-strict](claude/.claude/skills/rust-strict/SKILL.md) |
 | **TDD Process** | RED-GREEN-REFACTOR cycle, quality gates, anti-patterns | [→ skills/tdd](claude/.claude/skills/tdd/SKILL.md) |
 | **Refactoring** | Priority classification, semantic vs structural framework, DRY decision tree | [→ skills/refactoring](claude/.claude/skills/refactoring/SKILL.md) |
 | **Functional Programming** | Immutability violations catalog, pure functions, composition patterns | [→ skills/functional](claude/.claude/skills/functional/SKILL.md) |
@@ -99,11 +101,16 @@ Unlike typical style guides, CLAUDE.md provides:
 | Writing code before tests | [tdd](claude/.claude/skills/tdd/SKILL.md) | TDD quality gates + git verification |
 | Losing context on complex features | [expectations](claude/.claude/skills/expectations/SKILL.md) | Learning capture framework (7 criteria) |
 | Planning significant work | [planning](claude/.claude/skills/planning/SKILL.md) | Three-document model (PLAN/WIP/LEARNINGS), commit approval |
+| Ownership/borrowing confusion in Rust | [rust-strict](claude/.claude/skills/rust-strict/SKILL.md) | Work with the borrow checker, not against it |
+| unwrap() causing panics in Rust | [rust-error-handling](claude/.claude/skills/rust-error-handling/SKILL.md) | Use Result, ?, and proper error types |
+| Async/concurrency issues in Rust | [rust-concurrency](claude/.claude/skills/rust-concurrency/SKILL.md) | Fearless concurrency through ownership |
 
 ### How Skills Work
 
 Skills are **auto-discovered** by Claude when relevant:
 - Writing TypeScript? → `typescript-strict` skill loads automatically
+- Writing Go? → `go-strict` skill loads automatically
+- Writing Rust? → `rust-strict` skill loads automatically
 - Running tests? → `testing` skill provides factory patterns
 - After GREEN tests? → `refactoring` skill assesses opportunities
 - Reviewing test effectiveness? → `mutation-testing` skill identifies weak tests
@@ -421,7 +428,7 @@ Ask yourself:
 
 [**→ Read the agents documentation**](claude/.claude/agents/README.md)
 
-Nine specialized sub-agents that run in isolated context windows to enforce CLAUDE.md principles and manage development workflow:
+Eleven specialized sub-agents that run in isolated context windows to enforce CLAUDE.md principles and manage development workflow:
 
 ### 1. `tdd-guardian` - TDD Compliance Enforcer
 
@@ -479,7 +486,59 @@ Claude Code: [Launches ts-enforcer agent]
 
 ---
 
-### 3. `refactor-scan` - Refactoring Opportunity Scanner
+### 3. `go-enforcer` - Go Best Practices Enforcer
+
+**Use before commits** or **when writing Go code**.
+
+**What it checks:**
+- ❌ Ignored errors (never `_, _ := ...`)
+- ❌ Context stored in structs (should be passed as first parameter)
+- ❌ Large interfaces (should be 1-3 methods)
+- ✅ Error wrapping with context
+- ✅ Idiomatic naming (no Get prefix)
+- ✅ Dependency injection patterns
+
+**Example invocation:**
+```
+You: "I've written some Go code. Check for best practice violations."
+Claude Code: [Launches go-enforcer agent]
+```
+
+**Output:**
+- Critical violations (ignored errors, context in structs)
+- High priority issues (large interfaces, Get prefix)
+- Style improvements (naming conventions)
+- Compliance score with specific fixes
+
+---
+
+### 4. `rust-enforcer` - Rust Best Practices Enforcer
+
+**Use before commits** or **when writing Rust code**.
+
+**What it checks:**
+- ❌ unwrap()/expect() in production code (use Result and ?)
+- ❌ Unnecessary cloning (prefer borrowing)
+- ❌ unsafe blocks without justification
+- ✅ Proper error handling with thiserror/anyhow
+- ✅ Small traits defined at consumer
+- ✅ Ownership-correct patterns
+
+**Example invocation:**
+```
+You: "I've written some Rust code. Check for idiomatic violations."
+Claude Code: [Launches rust-enforcer agent]
+```
+
+**Output:**
+- Critical violations (unwrap, panic, unsafe without comment)
+- High priority issues (clone abuse, large traits)
+- Style improvements (naming, clippy warnings)
+- Compliance score with specific fixes
+
+---
+
+### 5. `refactor-scan` - Refactoring Opportunity Scanner
 
 **Use after achieving green tests** (the REFACTOR step in RED-GREEN-REFACTOR).
 
@@ -510,7 +569,7 @@ Claude Code: [Launches refactor-scan agent]
 
 ---
 
-### 4. `docs-guardian` - Documentation Quality Guardian
+### 6. `docs-guardian` - Documentation Quality Guardian
 
 **Use proactively** when creating documentation or **reactively** to review and improve existing docs.
 
@@ -548,7 +607,7 @@ Claude Code: [Launches docs-guardian agent]
 
 ---
 
-### 5. `learn` - CLAUDE.md Learning Integrator
+### 7. `learn` - CLAUDE.md Learning Integrator
 
 **Use proactively** when discovering gotchas, or **reactively** after completing complex features.
 
@@ -574,7 +633,7 @@ Claude Code: [Launches learn agent]
 
 ---
 
-### 6. `progress-guardian` - Progress Guardian
+### 8. `progress-guardian` - Progress Guardian
 
 **Use proactively** when starting significant multi-step work, or **reactively** to update progress, capture learnings, and handle blockers.
 
@@ -614,7 +673,7 @@ Claude Code: [Launches progress-guardian to update WIP.md and ask for commit app
 
 ---
 
-### 7. `adr` - Architecture Decision Records
+### 9. `adr` - Architecture Decision Records
 
 **Use proactively** when making significant architectural decisions, or **reactively** to document decisions already made.
 
@@ -653,7 +712,7 @@ Claude Code: [Launches adr agent to document the rationale]
 
 ---
 
-### 8. `pr-reviewer` - Pull Request Quality Reviewer
+### 10. `pr-reviewer` - Pull Request Quality Reviewer
 
 **Use proactively** when reviewing a PR, or **reactively** to analyze an existing PR and post feedback.
 
@@ -698,7 +757,7 @@ Use the `/generate-pr-review` command to create a project-specific PR reviewer t
 
 ---
 
-### 9. `use-case-data-patterns` - Use Case to Data Pattern Analyzer
+### 11. `use-case-data-patterns` - Use Case to Data Pattern Analyzer
 
 **Use proactively** when implementing features, or **reactively** to understand how features work end-to-end.
 
@@ -804,9 +863,9 @@ chmod +x install-claude.sh
 
 **What gets installed (v3.0.0):**
 - ✅ `~/.claude/CLAUDE.md` (~100 lines - lean core principles)
-- ✅ `~/.claude/skills/` (10 auto-discovered patterns: tdd, testing, mutation-testing, typescript-strict, functional, refactoring, expectations, planning, front-end-testing, react-testing)
+- ✅ `~/.claude/skills/` (17 auto-discovered patterns: tdd, testing, mutation-testing, typescript-strict, functional, refactoring, expectations, planning, front-end-testing, react-testing, go-strict, go-testing, go-error-handling, go-concurrency, rust-strict, rust-testing, rust-error-handling, rust-concurrency)
 - ✅ `~/.claude/commands/` (2 slash commands: /pr, /generate-pr-review)
-- ✅ `~/.claude/agents/` (9 automated enforcement agents)
+- ✅ `~/.claude/agents/` (11 automated enforcement agents)
 
 **Optional: Enable GitHub MCP Integration**
 
@@ -921,6 +980,8 @@ curl -o .claude/CLAUDE.md https://raw.githubusercontent.com/intinig/claude.md/ma
 # Download all agents
 curl -o .claude/agents/tdd-guardian.md https://raw.githubusercontent.com/intinig/claude.md/main/claude/.claude/agents/tdd-guardian.md
 curl -o .claude/agents/ts-enforcer.md https://raw.githubusercontent.com/intinig/claude.md/main/claude/.claude/agents/ts-enforcer.md
+curl -o .claude/agents/go-enforcer.md https://raw.githubusercontent.com/intinig/claude.md/main/claude/.claude/agents/go-enforcer.md
+curl -o .claude/agents/rust-enforcer.md https://raw.githubusercontent.com/intinig/claude.md/main/claude/.claude/agents/rust-enforcer.md
 curl -o .claude/agents/refactor-scan.md https://raw.githubusercontent.com/intinig/claude.md/main/claude/.claude/agents/refactor-scan.md
 curl -o .claude/agents/docs-guardian.md https://raw.githubusercontent.com/intinig/claude.md/main/claude/.claude/agents/docs-guardian.md
 curl -o .claude/agents/learn.md https://raw.githubusercontent.com/intinig/claude.md/main/claude/.claude/agents/learn.md
@@ -988,7 +1049,7 @@ This gives you the complete guidelines (1,818 lines) in a single standalone file
 
 ### Version Note: v1.0.0 vs v2.0.0 vs v3.0.0
 
-**Current version (v3.0.0):** Skills-based architecture with lean CLAUDE.md (~100 lines) + 9 auto-discovered skills + planning workflow
+**Current version (v3.0.0):** Skills-based architecture with lean CLAUDE.md (~100 lines) + 17 auto-discovered skills + planning workflow
 
 **Previous version (v2.0.0):** Modular structure with main file (156 lines) + 6 detailed docs loaded via @imports (~3000+ lines total)
 
@@ -1011,10 +1072,10 @@ The installation script installs v3.0.0 by default. Use `--version v2.0.0` or `-
 ## 📚 Documentation
 
 - **[CLAUDE.md](claude/.claude/CLAUDE.md)** - Core development principles (~100 lines)
-- **[Skills](claude/.claude/skills/)** - Auto-discovered patterns (10 skills: tdd, testing, mutation-testing, typescript-strict, functional, refactoring, expectations, planning, front-end-testing, react-testing)
+- **[Skills](claude/.claude/skills/)** - Auto-discovered patterns (17 skills: tdd, testing, mutation-testing, typescript-strict, functional, refactoring, expectations, planning, front-end-testing, react-testing, go-strict, go-testing, go-error-handling, go-concurrency, rust-strict, rust-testing, rust-error-handling, rust-concurrency)
 - **[Commands](claude/.claude/commands/)** - Slash commands (/pr, /generate-pr-review)
 - **[Agents README](claude/.claude/agents/README.md)** - Detailed agent documentation with examples
-- **[Agent Definitions](claude/.claude/agents/)** - Individual agent configuration files (9 agents including pr-reviewer)
+- **[Agent Definitions](claude/.claude/agents/)** - Individual agent configuration files (11 agents including go-enforcer, rust-enforcer, pr-reviewer)
 
 ---
 

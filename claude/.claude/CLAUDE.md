@@ -1,6 +1,6 @@
 # Development Guidelines for Claude
 
-> **About this file (v3.1.0):** Lean version optimized for context efficiency. Core principles here; detailed patterns loaded on-demand via skills.
+> **About this file (v3.2.0):** Lean version optimized for context efficiency. Core principles here; detailed patterns loaded on-demand via skills.
 >
 > **Architecture:**
 > - **CLAUDE.md** (this file): Core philosophy + quick reference (~150 lines, always loaded)
@@ -15,9 +15,10 @@
 ## Language Mode
 
 **Auto-detection** at session start:
+- `Cargo.toml` present → **Rust mode** (load: rust-strict, rust-testing, rust-error-handling, rust-concurrency)
 - `go.mod` present → **Go mode** (load: go-strict, go-testing, go-error-handling, go-concurrency)
 - `package.json` or `tsconfig.json` present → **TypeScript mode** (load: typescript-strict, react-testing, front-end-testing)
-- Neither found → **Ask user**: "What language is this project using? (Go / TypeScript)"
+- None found → **Ask user**: "What language is this project using? (Rust / Go / TypeScript)"
 
 Language mode determines which skills are automatically relevant and which enforcer agent to use.
 
@@ -50,6 +51,13 @@ I follow Test-Driven Development (TDD) with a strong emphasis on behavior-driven
 - Small interfaces, defined at consumer
 - Errors wrapped with context (`fmt.Errorf("%w", err)`)
 - Tools: Go 1.21+, testing package, testify/assert
+
+**Rust Mode:**
+- No unwrap()/expect() in production - use Result and ? operator
+- Prefer borrowing over cloning
+- Small traits, defined at consumer
+- Errors wrapped with context (thiserror/anyhow)
+- Tools: cargo clippy, cargo fmt, cargo test
 
 ## Testing Principles
 
@@ -94,6 +102,22 @@ For detailed TypeScript patterns and rationale, load the `typescript-strict` ski
 For detailed Go patterns, load the `go-strict` skill.
 For error handling patterns, load the `go-error-handling` skill.
 For concurrency patterns, load the `go-concurrency` skill.
+
+## Rust Guidelines
+
+**Core principle**: Ownership-driven design. Explicit error handling. Fearless concurrency.
+
+**Quick reference:**
+- No unwrap()/expect() in production code
+- Use ? operator for error propagation
+- Prefer borrowing (&T, &mut T) over cloning
+- Small traits (1-3 methods), defined at consumer not provider
+- Context on errors: `.context("operation failed")?`
+- Builder pattern for complex struct construction
+
+For detailed Rust patterns, load the `rust-strict` skill.
+For error handling patterns, load the `rust-error-handling` skill.
+For concurrency patterns, load the `rust-concurrency` skill.
 
 ## Code Style
 
@@ -153,6 +177,12 @@ For detailed guidance on expectations and documentation, load the `expectations`
 - [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
 - [Standard Go Project Layout](https://github.com/golang-standards/project-layout)
 - [Go Proverbs](https://go-proverbs.github.io/)
+
+**Rust:**
+- [The Rust Book](https://doc.rust-lang.org/book/)
+- [Rust By Example](https://doc.rust-lang.org/rust-by-example/)
+- [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/)
+- [Rustonomicon](https://doc.rust-lang.org/nomicon/)
 
 ## Summary
 

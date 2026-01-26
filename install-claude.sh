@@ -157,6 +157,7 @@ mkdir -p ~/.claude/skills/tdd ~/.claude/skills/typescript-strict ~/.claude/skill
 mkdir -p ~/.claude/skills/refactoring ~/.claude/skills/testing ~/.claude/skills/expectations ~/.claude/skills/planning
 mkdir -p ~/.claude/skills/front-end-testing ~/.claude/skills/react-testing
 mkdir -p ~/.claude/skills/go-strict ~/.claude/skills/go-testing ~/.claude/skills/go-error-handling ~/.claude/skills/go-concurrency
+mkdir -p ~/.claude/skills/rust-strict ~/.claude/skills/rust-testing ~/.claude/skills/rust-error-handling ~/.claude/skills/rust-concurrency
 echo -e "${GREEN}✓${NC} Directories created"
 echo ""
 
@@ -189,6 +190,10 @@ if [[ "$INSTALL_SKILLS" == true ]]; then
     "go-testing/SKILL.md"
     "go-error-handling/SKILL.md"
     "go-concurrency/SKILL.md"
+    "rust-strict/SKILL.md"
+    "rust-testing/SKILL.md"
+    "rust-error-handling/SKILL.md"
+    "rust-concurrency/SKILL.md"
   )
 
   for skill in "${skills[@]}"; do
@@ -227,6 +232,7 @@ if [[ "$INSTALL_AGENTS" == true ]]; then
     "tdd-guardian.md"
     "ts-enforcer.md"
     "go-enforcer.md"
+    "rust-enforcer.md"
     "refactor-scan.md"
     "docs-guardian.md"
     "adr.md"
@@ -274,7 +280,7 @@ if [[ "$INSTALL_CLAUDE" == true ]]; then
 fi
 
 if [[ "$INSTALL_SKILLS" == true ]]; then
-  echo -e "  ${GREEN}✓${NC} skills/ (13 auto-discovered patterns: tdd, testing, typescript-strict, functional, refactoring, expectations, planning, front-end-testing, react-testing, go-strict, go-testing, go-error-handling, go-concurrency)"
+  echo -e "  ${GREEN}✓${NC} skills/ (17 auto-discovered patterns: tdd, testing, typescript-strict, functional, refactoring, expectations, planning, front-end-testing, react-testing, go-strict, go-testing, go-error-handling, go-concurrency, rust-strict, rust-testing, rust-error-handling, rust-concurrency)"
 fi
 
 if [[ "$INSTALL_COMMANDS" == true ]]; then
@@ -282,7 +288,7 @@ if [[ "$INSTALL_COMMANDS" == true ]]; then
 fi
 
 if [[ "$INSTALL_AGENTS" == true ]]; then
-  echo -e "  ${GREEN}✓${NC} agents/ (10 Claude Code agents + README)"
+  echo -e "  ${GREEN}✓${NC} agents/ (11 Claude Code agents + README)"
 fi
 
 if [[ "$INSTALL_OPENCODE" == true ]]; then
