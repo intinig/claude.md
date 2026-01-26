@@ -1,13 +1,14 @@
 # Development Guidelines for Claude
 
-> **About this file (v3.2.0):** Lean version optimized for context efficiency. Core principles here; detailed patterns loaded on-demand via skills.
+> **About this file (v3.3.0):** Lean version optimized for context efficiency. Core principles here; detailed patterns loaded on-demand via skills.
 >
 > **Architecture:**
-> - **CLAUDE.md** (this file): Core philosophy + quick reference (~150 lines, always loaded)
+> - **CLAUDE.md** (this file): Core philosophy + quick reference (~200 lines, always loaded)
 > - **Skills**: Detailed patterns loaded on-demand (language-agnostic + language-specific)
 > - **Agents**: Specialized subprocesses for verification and analysis
 >
 > **Previous versions:**
+> - v3.2.0: Added Go and Rust support
 > - v3.0.0: TypeScript-only focus
 > - v2.0.0: Modular with @docs/ imports (~3000+ lines always loaded)
 > - v1.0.0: Single monolithic file (1,818 lines)
@@ -18,7 +19,9 @@
 - `Cargo.toml` present → **Rust mode** (load: rust-strict, rust-testing, rust-error-handling, rust-concurrency)
 - `go.mod` present → **Go mode** (load: go-strict, go-testing, go-error-handling, go-concurrency)
 - `package.json` or `tsconfig.json` present → **TypeScript mode** (load: typescript-strict, react-testing, front-end-testing)
-- None found → **Ask user**: "What language is this project using? (Rust / Go / TypeScript)"
+- `*.csproj` or `*.sln` present (without Unity) → **C# mode** (load: csharp-strict, csharp-testing, csharp-error-handling, csharp-concurrency)
+- `Assets/` folder with `ProjectSettings/` or `*.unity` files → **Unity mode** (load: unity-strict, unity-testing, unity-patterns, unity-performance + all C# skills)
+- None found → **Ask user**: "What language is this project using? (Rust / Go / TypeScript / C# / Unity)"
 
 Language mode determines which skills are automatically relevant and which enforcer agent to use.
 
@@ -58,6 +61,22 @@ I follow Test-Driven Development (TDD) with a strong emphasis on behavior-driven
 - Small traits, defined at consumer
 - Errors wrapped with context (thiserror/anyhow)
 - Tools: cargo clippy, cargo fmt, cargo test
+
+**C# Mode:**
+- Nullable reference types enabled (`#nullable enable`)
+- No `null` returns where non-nullable declared
+- Records for DTOs, classes for services
+- Constructor injection only (no property injection)
+- Async all the way with CancellationToken
+- Tools: dotnet build, dotnet test, dotnet format
+
+**Unity Mode:**
+- Cache component references in Awake (never GetComponent in Update)
+- Never `new MonoBehaviour()` - use AddComponent or prefabs
+- Clean up events in OnDisable/OnDestroy
+- No string-based methods (SendMessage, Invoke by string)
+- Use `[SerializeField]` for inspector fields (not public)
+- Tools: Unity Test Framework (Edit Mode + Play Mode)
 
 ## Testing Principles
 
@@ -118,6 +137,42 @@ For concurrency patterns, load the `go-concurrency` skill.
 For detailed Rust patterns, load the `rust-strict` skill.
 For error handling patterns, load the `rust-error-handling` skill.
 For concurrency patterns, load the `rust-concurrency` skill.
+
+## C# Guidelines
+
+**Core principle**: Nullable safety. Async all the way. Constructor injection.
+
+**Quick reference:**
+- `#nullable enable` in all files (or project-level)
+- No `null` returns for non-nullable types
+- Records for DTOs and value objects
+- Constructor injection only (no [Inject], no service locator)
+- Async methods return Task/Task<T>, not void
+- CancellationToken on all public async methods
+- No `.Result`, `.Wait()`, or `.GetAwaiter().GetResult()`
+
+For detailed C# patterns, load the `csharp-strict` skill.
+For error handling patterns, load the `csharp-error-handling` skill.
+For concurrency patterns, load the `csharp-concurrency` skill.
+For testing patterns, load the `csharp-testing` skill.
+
+## Unity Guidelines
+
+**Core principle**: Cache references. Pool objects. Clean up events. Avoid string APIs.
+
+**Quick reference:**
+- Cache GetComponent results in Awake (never in Update)
+- Never `new MonoBehaviour()` - use AddComponent or Instantiate
+- Subscribe in OnEnable, unsubscribe in OnDisable
+- No SendMessage, BroadcastMessage, or string Invoke
+- Use `[SerializeField] private` not public for inspector
+- Physics code in FixedUpdate, input in Update
+- Use object pooling for frequently spawned objects
+
+For detailed Unity patterns, load the `unity-strict` skill.
+For architecture patterns, load the `unity-patterns` skill.
+For performance optimization, load the `unity-performance` skill.
+For testing patterns, load the `unity-testing` skill.
 
 ## Code Style
 
@@ -183,6 +238,18 @@ For detailed guidance on expectations and documentation, load the `expectations`
 - [Rust By Example](https://doc.rust-lang.org/rust-by-example/)
 - [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/)
 - [Rustonomicon](https://doc.rust-lang.org/nomicon/)
+
+**C#:**
+- [C# Language Reference](https://learn.microsoft.com/en-us/dotnet/csharp/)
+- [.NET Design Guidelines](https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/)
+- [Nullable Reference Types](https://learn.microsoft.com/en-us/dotnet/csharp/nullable-references)
+- [Async/Await Best Practices](https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/)
+
+**Unity:**
+- [Unity Manual](https://docs.unity3d.com/Manual/)
+- [Script Execution Order](https://docs.unity3d.com/Manual/ExecutionOrder.html)
+- [ScriptableObject Architecture](https://unity.com/how-to/architect-game-code-scriptable-objects)
+- [Unity Performance Best Practices](https://docs.unity3d.com/Manual/BestPracticeGuides.html)
 
 ## Summary
 
