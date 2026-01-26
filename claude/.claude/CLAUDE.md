@@ -25,6 +25,17 @@
 
 Language mode determines which skills are automatically relevant and which enforcer agent to use.
 
+## Shell Configuration
+
+**MANDATORY: Use the correct shell for your platform.**
+
+| Platform | Shell | Command |
+|----------|-------|---------|
+| **Windows** | PowerShell (pwsh) | `pwsh -Command "..."` |
+| **macOS/Linux** | Bash | `bash -c "..."` |
+
+**Windows users:** Always use PowerShell (`pwsh.exe`), never bash or cmd. All shell commands in this framework assume PowerShell on Windows.
+
 ## Core Philosophy
 
 **TEST-DRIVEN DEVELOPMENT IS NON-NEGOTIABLE.** Every single line of production code must be written in response to a failing test. No exceptions. This is not a suggestion or a preference - it is the fundamental practice that enables all other principles in this document.
