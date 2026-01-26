@@ -1,6 +1,6 @@
 # Development Guidelines for AI-Assisted Programming
 
-**Comprehensive CLAUDE.md guidelines + enforcement agents for Test-Driven Development, TypeScript strict mode, Go best practices, Rust idioms, and functional programming.**
+**Comprehensive CLAUDE.md guidelines + enforcement agents for Test-Driven Development, TypeScript strict mode, Go best practices, Rust idioms, C# conventions, Unity patterns, and functional programming.**
 
 [![Watch me use my CLAUDE.md file to build a real feature](https://img.youtube.com/vi/rSoeh6K5Fqo/0.jpg)](https://www.youtube.com/watch?v=rSoeh6K5Fqo)
 
@@ -29,9 +29,9 @@ A comprehensive **development framework for AI-assisted programming** with Claud
 
 This repository provides:
 
-- **[CLAUDE.md](claude/.claude/CLAUDE.md)** - Core development principles (~100 lines)
-- **[Skills](claude/.claude/skills/)** - 17 auto-discovered skill patterns loaded on-demand
-- **[Eleven enforcement agents](claude/.claude/agents/)** - Automated quality enforcement
+- **[CLAUDE.md](claude/.claude/CLAUDE.md)** - Core development principles (~200 lines)
+- **[Skills](claude/.claude/skills/)** - 25 auto-discovered skill patterns loaded on-demand
+- **[Thirteen enforcement agents](claude/.claude/agents/)** - Automated quality enforcement
 
 ---
 
@@ -71,6 +71,8 @@ Unlike typical style guides, CLAUDE.md provides:
 | **TypeScript Guidelines** | Schema-first decision framework, type vs interface clarity, immutability patterns | [→ skills/typescript-strict](claude/.claude/skills/typescript-strict/SKILL.md) |
 | **Go Guidelines** | Error handling, small interfaces, context propagation, concurrency patterns | [→ skills/go-strict](claude/.claude/skills/go-strict/SKILL.md) |
 | **Rust Guidelines** | Ownership patterns, error handling with Result, traits, async/await concurrency | [→ skills/rust-strict](claude/.claude/skills/rust-strict/SKILL.md) |
+| **C# Guidelines** | Nullable reference types, records, constructor injection, async patterns | [→ skills/csharp-strict](claude/.claude/skills/csharp-strict/SKILL.md) |
+| **Unity Guidelines** | MonoBehaviour lifecycle, component caching, event cleanup, pooling | [→ skills/unity-strict](claude/.claude/skills/unity-strict/SKILL.md) |
 | **TDD Process** | RED-GREEN-REFACTOR cycle, quality gates, anti-patterns | [→ skills/tdd](claude/.claude/skills/tdd/SKILL.md) |
 | **Refactoring** | Priority classification, semantic vs structural framework, DRY decision tree | [→ skills/refactoring](claude/.claude/skills/refactoring/SKILL.md) |
 | **Functional Programming** | Immutability violations catalog, pure functions, composition patterns | [→ skills/functional](claude/.claude/skills/functional/SKILL.md) |
@@ -81,7 +83,7 @@ Unlike typical style guides, CLAUDE.md provides:
 
 ## 📖 Skills Guide
 
-**v3.0 Architecture:** Skills are auto-discovered patterns loaded on-demand when relevant. This reduces always-loaded context from ~3000+ lines to ~100 lines.
+**v3.3 Architecture:** Skills are auto-discovered patterns loaded on-demand when relevant. This reduces always-loaded context from ~3000+ lines to ~200 lines.
 
 ### Quick Navigation by Problem
 
@@ -104,6 +106,11 @@ Unlike typical style guides, CLAUDE.md provides:
 | Ownership/borrowing confusion in Rust | [rust-strict](claude/.claude/skills/rust-strict/SKILL.md) | Work with the borrow checker, not against it |
 | unwrap() causing panics in Rust | [rust-error-handling](claude/.claude/skills/rust-error-handling/SKILL.md) | Use Result, ?, and proper error types |
 | Async/concurrency issues in Rust | [rust-concurrency](claude/.claude/skills/rust-concurrency/SKILL.md) | Fearless concurrency through ownership |
+| Nullable reference confusion in C# | [csharp-strict](claude/.claude/skills/csharp-strict/SKILL.md) | Enable nullable, never return null for non-nullable |
+| async void causing exceptions | [csharp-concurrency](claude/.claude/skills/csharp-concurrency/SKILL.md) | Return Task, use CancellationToken everywhere |
+| Unity GetComponent performance | [unity-strict](claude/.claude/skills/unity-strict/SKILL.md) | Cache in Awake, never in Update loops |
+| Memory leaks from events in Unity | [unity-patterns](claude/.claude/skills/unity-patterns/SKILL.md) | Subscribe OnEnable, unsubscribe OnDisable |
+| GC spikes in Unity games | [unity-performance](claude/.claude/skills/unity-performance/SKILL.md) | Pool objects, avoid allocations in hot paths |
 
 ### How Skills Work
 
@@ -111,6 +118,8 @@ Skills are **auto-discovered** by Claude when relevant:
 - Writing TypeScript? → `typescript-strict` skill loads automatically
 - Writing Go? → `go-strict` skill loads automatically
 - Writing Rust? → `rust-strict` skill loads automatically
+- Writing C#? → `csharp-strict` skill loads automatically
+- Working in Unity? → `unity-strict` + all C# skills load automatically
 - Running tests? → `testing` skill provides factory patterns
 - After GREEN tests? → `refactoring` skill assesses opportunities
 - Reviewing test effectiveness? → `mutation-testing` skill identifies weak tests
@@ -428,7 +437,7 @@ Ask yourself:
 
 [**→ Read the agents documentation**](claude/.claude/agents/README.md)
 
-Eleven specialized sub-agents that run in isolated context windows to enforce CLAUDE.md principles and manage development workflow:
+Thirteen specialized sub-agents that run in isolated context windows to enforce CLAUDE.md principles and manage development workflow:
 
 ### 1. `tdd-guardian` - TDD Compliance Enforcer
 
@@ -538,7 +547,63 @@ Claude Code: [Launches rust-enforcer agent]
 
 ---
 
-### 5. `refactor-scan` - Refactoring Opportunity Scanner
+### 5. `csharp-enforcer` - C# Best Practices Enforcer
+
+**Use before commits** or **when writing C# code**.
+
+**What it checks:**
+- ❌ Nullable reference types not enabled (`#nullable enable`)
+- ❌ `null` returns for non-nullable types
+- ❌ `async void` methods (except event handlers)
+- ❌ `.Result`, `.Wait()`, or blocking async
+- ✅ Records for DTOs and value objects
+- ✅ Constructor injection (no property injection)
+- ✅ CancellationToken on all async methods
+- ✅ Proper exception handling with guard clauses
+
+**Example invocation:**
+```
+You: "I've written some C# code. Check for best practice violations."
+Claude Code: [Launches csharp-enforcer agent]
+```
+
+**Output:**
+- Critical violations (nullable disabled, async void, blocking async)
+- High priority issues (missing CancellationToken, property injection)
+- Style improvements (naming conventions, record usage)
+- Compliance score with specific fixes
+
+---
+
+### 6. `unity-enforcer` - Unity Best Practices Enforcer
+
+**Use before commits** or **when writing Unity code**.
+
+**What it checks:**
+- ❌ GetComponent in Update/FixedUpdate/LateUpdate (performance killer)
+- ❌ `new MonoBehaviour()` (always wrong - use AddComponent)
+- ❌ Missing event unsubscription (memory leaks)
+- ❌ SendMessage/BroadcastMessage (no compile-time safety)
+- ❌ String-based Invoke/InvokeRepeating
+- ✅ [SerializeField] for inspector fields (not public)
+- ✅ Component caching in Awake
+- ✅ Object pooling for frequent spawns
+
+**Example invocation:**
+```
+You: "I've written some Unity scripts. Check for antipatterns."
+Claude Code: [Launches unity-enforcer agent]
+```
+
+**Output:**
+- Critical violations (GetComponent in Update, new MonoBehaviour)
+- High priority issues (event leaks, SendMessage usage)
+- Performance warnings (allocations in hot paths, missing pooling)
+- Style improvements (RequireComponent, SerializeField)
+
+---
+
+### 7. `refactor-scan` - Refactoring Opportunity Scanner
 
 **Use after achieving green tests** (the REFACTOR step in RED-GREEN-REFACTOR).
 
@@ -569,7 +634,7 @@ Claude Code: [Launches refactor-scan agent]
 
 ---
 
-### 6. `docs-guardian` - Documentation Quality Guardian
+### 8. `docs-guardian` - Documentation Quality Guardian
 
 **Use proactively** when creating documentation or **reactively** to review and improve existing docs.
 
@@ -607,7 +672,7 @@ Claude Code: [Launches docs-guardian agent]
 
 ---
 
-### 7. `learn` - CLAUDE.md Learning Integrator
+### 9. `learn` - CLAUDE.md Learning Integrator
 
 **Use proactively** when discovering gotchas, or **reactively** after completing complex features.
 
@@ -633,7 +698,7 @@ Claude Code: [Launches learn agent]
 
 ---
 
-### 8. `progress-guardian` - Progress Guardian
+### 10. `progress-guardian` - Progress Guardian
 
 **Use proactively** when starting significant multi-step work, or **reactively** to update progress, capture learnings, and handle blockers.
 
@@ -673,7 +738,7 @@ Claude Code: [Launches progress-guardian to update WIP.md and ask for commit app
 
 ---
 
-### 9. `adr` - Architecture Decision Records
+### 11. `adr` - Architecture Decision Records
 
 **Use proactively** when making significant architectural decisions, or **reactively** to document decisions already made.
 
@@ -712,7 +777,7 @@ Claude Code: [Launches adr agent to document the rationale]
 
 ---
 
-### 10. `pr-reviewer` - Pull Request Quality Reviewer
+### 12. `pr-reviewer` - Pull Request Quality Reviewer
 
 **Use proactively** when reviewing a PR, or **reactively** to analyze an existing PR and post feedback.
 
@@ -757,7 +822,7 @@ Use the `/generate-pr-review` command to create a project-specific PR reviewer t
 
 ---
 
-### 11. `use-case-data-patterns` - Use Case to Data Pattern Analyzer
+### 13. `use-case-data-patterns` - Use Case to Data Pattern Analyzer
 
 **Use proactively** when implementing features, or **reactively** to understand how features work end-to-end.
 
@@ -829,9 +894,14 @@ Agents can be invoked implicitly (Claude detects when to use them) or explicitly
 - ✅ Modular structure loads details on-demand
 - ✅ Easy updates via git pull
 
-**One-liner installation:**
+**One-liner installation (macOS/Linux):**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/intinig/claude.md/main/install-claude.sh | bash
+```
+
+**One-liner installation (Windows PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/intinig/claude.md/main/install-claude.ps1 | iex
 ```
 
 **One-liner with options** (use `bash -s --` to pass arguments):
@@ -841,31 +911,71 @@ curl -fsSL https://raw.githubusercontent.com/intinig/claude.md/main/install-clau
 
 # Install specific version
 curl -fsSL https://raw.githubusercontent.com/intinig/claude.md/main/install-claude.sh | bash -s -- --version v2.0.0
+
+# Install only TypeScript support
+curl -fsSL https://raw.githubusercontent.com/intinig/claude.md/main/install-claude.sh | bash -s -- --lang typescript
+
+# Install multiple languages
+curl -fsSL https://raw.githubusercontent.com/intinig/claude.md/main/install-claude.sh | bash -s -- --lang go,rust
 ```
 
 **Or download and run:**
 ```bash
+# macOS/Linux
 curl -fsSL https://raw.githubusercontent.com/intinig/claude.md/main/install-claude.sh -o install-claude.sh
 chmod +x install-claude.sh
 ./install-claude.sh
+
+# Windows PowerShell
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/intinig/claude.md/main/install-claude.ps1 -OutFile install-claude.ps1
+.\install-claude.ps1
 ```
 
-**Install options:**
+**Install options (bash):**
 ```bash
-./install-claude.sh                    # Install everything (CLAUDE.md + skills + commands + agents)
+./install-claude.sh                    # Install everything (all languages)
 ./install-claude.sh --claude-only      # Install only CLAUDE.md
 ./install-claude.sh --skills-only      # Install only skills
 ./install-claude.sh --no-agents        # Install without agents
 ./install-claude.sh --with-opencode    # Also install OpenCode configuration
 ./install-claude.sh --version v2.0.0   # Install v2.0.0 (modular docs)
 ./install-claude.sh --version v1.0.0   # Install v1.0.0 (single file)
+./install-claude.sh --lang typescript  # Install only TypeScript support
+./install-claude.sh --lang go,rust     # Install Go and Rust support
+./install-claude.sh --lang unity       # Install Unity + C# support (Unity includes C#)
 ```
 
-**What gets installed (v3.0.0):**
-- ✅ `~/.claude/CLAUDE.md` (~100 lines - lean core principles)
-- ✅ `~/.claude/skills/` (17 auto-discovered patterns: tdd, testing, mutation-testing, typescript-strict, functional, refactoring, expectations, planning, front-end-testing, react-testing, go-strict, go-testing, go-error-handling, go-concurrency, rust-strict, rust-testing, rust-error-handling, rust-concurrency)
+**Install options (PowerShell):**
+```powershell
+.\install-claude.ps1                    # Install everything (all languages)
+.\install-claude.ps1 -ClaudeOnly        # Install only CLAUDE.md
+.\install-claude.ps1 -SkillsOnly        # Install only skills
+.\install-claude.ps1 -NoAgents          # Install without agents
+.\install-claude.ps1 -Lang typescript   # Install only TypeScript support
+.\install-claude.ps1 -Lang go,rust      # Install Go and Rust support
+.\install-claude.ps1 -Lang unity        # Install Unity + C# support
+```
+
+**Language options for `--lang` / `-Lang`:**
+| Language | Aliases | Skills Installed |
+|----------|---------|------------------|
+| typescript | ts | typescript-strict, react-testing, front-end-testing |
+| go | golang | go-strict, go-testing, go-error-handling, go-concurrency |
+| rust | rs | rust-strict, rust-testing, rust-error-handling, rust-concurrency |
+| csharp | cs, c# | csharp-strict, csharp-testing, csharp-error-handling, csharp-concurrency |
+| unity | unity3d | All C# skills + unity-strict, unity-testing, unity-patterns, unity-performance |
+
+**What gets installed (v3.3.0):**
+- ✅ `~/.claude/CLAUDE.md` (~200 lines - lean core principles with shell configuration)
+- ✅ `~/.claude/skills/` (25 auto-discovered patterns):
+  - **Core:** tdd, testing, mutation-testing, functional, refactoring, expectations, planning
+  - **TypeScript:** typescript-strict, front-end-testing, react-testing
+  - **Go:** go-strict, go-testing, go-error-handling, go-concurrency
+  - **Rust:** rust-strict, rust-testing, rust-error-handling, rust-concurrency
+  - **C#:** csharp-strict, csharp-testing, csharp-error-handling, csharp-concurrency
+  - **Unity:** unity-strict, unity-testing, unity-patterns, unity-performance
 - ✅ `~/.claude/commands/` (2 slash commands: /pr, /generate-pr-review)
-- ✅ `~/.claude/agents/` (11 automated enforcement agents)
+- ✅ `~/.claude/agents/` (13 automated enforcement agents including csharp-enforcer, unity-enforcer)
 
 **Optional: Enable GitHub MCP Integration**
 
@@ -982,6 +1092,8 @@ curl -o .claude/agents/tdd-guardian.md https://raw.githubusercontent.com/intinig
 curl -o .claude/agents/ts-enforcer.md https://raw.githubusercontent.com/intinig/claude.md/main/claude/.claude/agents/ts-enforcer.md
 curl -o .claude/agents/go-enforcer.md https://raw.githubusercontent.com/intinig/claude.md/main/claude/.claude/agents/go-enforcer.md
 curl -o .claude/agents/rust-enforcer.md https://raw.githubusercontent.com/intinig/claude.md/main/claude/.claude/agents/rust-enforcer.md
+curl -o .claude/agents/csharp-enforcer.md https://raw.githubusercontent.com/intinig/claude.md/main/claude/.claude/agents/csharp-enforcer.md
+curl -o .claude/agents/unity-enforcer.md https://raw.githubusercontent.com/intinig/claude.md/main/claude/.claude/agents/unity-enforcer.md
 curl -o .claude/agents/refactor-scan.md https://raw.githubusercontent.com/intinig/claude.md/main/claude/.claude/agents/refactor-scan.md
 curl -o .claude/agents/docs-guardian.md https://raw.githubusercontent.com/intinig/claude.md/main/claude/.claude/agents/docs-guardian.md
 curl -o .claude/agents/learn.md https://raw.githubusercontent.com/intinig/claude.md/main/claude/.claude/agents/learn.md
@@ -1047,35 +1159,48 @@ This gives you the complete guidelines (1,818 lines) in a single standalone file
 
 ---
 
-### Version Note: v1.0.0 vs v2.0.0 vs v3.0.0
+### Version Note: v1.0.0 vs v2.0.0 vs v3.x
 
-**Current version (v3.0.0):** Skills-based architecture with lean CLAUDE.md (~100 lines) + 17 auto-discovered skills + planning workflow
+**Current version (v3.3.0):** Skills-based architecture with lean CLAUDE.md (~200 lines) + 25 auto-discovered skills + C#/Unity support + shell configuration
+
+**Previous v3 versions:**
+- v3.2.0: Added Go and Rust support
+- v3.0.0: Initial skills-based architecture (TypeScript focus)
 
 **Previous version (v2.0.0):** Modular structure with main file (156 lines) + 6 detailed docs loaded via @imports (~3000+ lines total)
 
 **Legacy version (v1.0.0):** Single monolithic file (1,818 lines, all-in-one)
 
-| Version | Architecture | Context Size | Best For |
-|---------|--------------|--------------|----------|
-| **v3.0.0** | Skills (on-demand) | ~100 lines always | Context-efficient, truly lean |
-| **v2.0.0** | @docs/ imports | ~3000 lines always | Full docs always loaded |
-| **v1.0.0** | Single file | ~1800 lines always | Standalone, no dependencies |
+| Version | Architecture | Context Size | Languages | Best For |
+|---------|--------------|--------------|-----------|----------|
+| **v3.3.0** | Skills (on-demand) | ~200 lines always | TS, Go, Rust, C#, Unity | Multi-language projects |
+| **v3.2.0** | Skills (on-demand) | ~100 lines always | TS, Go, Rust | Backend-focused |
+| **v2.0.0** | @docs/ imports | ~3000 lines always | TS only | Full docs always loaded |
+| **v1.0.0** | Single file | ~1800 lines always | TS only | Standalone, no dependencies |
 
-- **v3.0.0 (current):** https://github.com/intinig/claude.md/tree/main/claude/.claude
+- **v3.3.0 (current):** https://github.com/intinig/claude.md/tree/main/claude/.claude
 - **v2.0.0 modular docs:** https://github.com/intinig/claude.md/tree/v2.0.0/claude/.claude
 - **v1.0.0 single file:** https://github.com/intinig/claude.md/blob/v1.0.0/claude/.claude/CLAUDE.md
 
-The installation script installs v3.0.0 by default. Use `--version v2.0.0` or `--version v1.0.0` for older versions.
+The installation script installs v3.3.0 by default. Use `--version v2.0.0` or `--version v1.0.0` for older versions.
+
+Use `--lang` option to install only specific language support (e.g., `--lang typescript,go`).
 
 ---
 
 ## 📚 Documentation
 
-- **[CLAUDE.md](claude/.claude/CLAUDE.md)** - Core development principles (~100 lines)
-- **[Skills](claude/.claude/skills/)** - Auto-discovered patterns (17 skills: tdd, testing, mutation-testing, typescript-strict, functional, refactoring, expectations, planning, front-end-testing, react-testing, go-strict, go-testing, go-error-handling, go-concurrency, rust-strict, rust-testing, rust-error-handling, rust-concurrency)
+- **[CLAUDE.md](claude/.claude/CLAUDE.md)** - Core development principles (~200 lines)
+- **[Skills](claude/.claude/skills/)** - Auto-discovered patterns (25 skills):
+  - Core: tdd, testing, mutation-testing, functional, refactoring, expectations, planning
+  - TypeScript: typescript-strict, front-end-testing, react-testing
+  - Go: go-strict, go-testing, go-error-handling, go-concurrency
+  - Rust: rust-strict, rust-testing, rust-error-handling, rust-concurrency
+  - C#: csharp-strict, csharp-testing, csharp-error-handling, csharp-concurrency
+  - Unity: unity-strict, unity-testing, unity-patterns, unity-performance
 - **[Commands](claude/.claude/commands/)** - Slash commands (/pr, /generate-pr-review)
 - **[Agents README](claude/.claude/agents/README.md)** - Detailed agent documentation with examples
-- **[Agent Definitions](claude/.claude/agents/)** - Individual agent configuration files (11 agents including go-enforcer, rust-enforcer, pr-reviewer)
+- **[Agent Definitions](claude/.claude/agents/)** - Individual agent configuration files (13 agents including csharp-enforcer, unity-enforcer, go-enforcer, rust-enforcer, pr-reviewer)
 
 ---
 
@@ -1083,9 +1208,23 @@ The installation script installs v3.0.0 by default. Use `--version v2.0.0` or `-
 
 - **Teams adopting TDD** - Automated enforcement prevents backsliding
 - **TypeScript projects** - Nuanced schema-first guidance with decision frameworks
+- **Go/Rust projects** - Idiomatic patterns and error handling
+- **C#/.NET projects** - Nullable safety, async patterns, dependency injection
+- **Unity game developers** - Performance patterns, lifecycle management, pooling
 - **AI-assisted development** - Consistent quality with Claude Code or similar tools
 - **Solo developers** - Institutional knowledge that doesn't rely on memory
 - **Code reviewers** - Objective quality criteria and git verification methods
+
+### Shell Configuration
+
+**Important:** CLAUDE.md v3.3.0 includes mandatory shell configuration:
+
+| Platform | Shell | Command |
+|----------|-------|---------|
+| **Windows** | PowerShell (pwsh) | `pwsh -Command "..."` |
+| **macOS/Linux** | Bash | `bash -c "..."` |
+
+Windows users must use PowerShell (`pwsh.exe`), never bash or cmd. This ensures consistent behavior across platforms.
 
 ---
 
