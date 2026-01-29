@@ -125,6 +125,15 @@ while [[ $# -gt 0 ]]; do
             echo -e "${RED}Error: Parent directory '$TARGET_PARENT' is not writable. Cannot install to '$2'${NC}"
             exit 1
           fi
+          TARGET_PARENT="$(dirname "$2")"
+          if [ ! -d "$TARGET_PARENT" ]; then
+            echo -e "${RED}Error: Parent directory '$TARGET_PARENT' does not exist for target '$2'${NC}"
+            exit 1
+          fi
+          if [ ! -w "$TARGET_PARENT" ]; then
+            echo -e "${RED}Error: Parent directory '$TARGET_PARENT' is not writable. Cannot install to '$2'${NC}"
+            exit 1
+          fi
           INSTALL_DIR="$2"
           ;;
         *)
