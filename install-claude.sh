@@ -103,6 +103,10 @@ while [[ $# -gt 0 ]]; do
         echo -e "${RED}Error: --target requires a value (home, project, or an absolute path)${NC}"
         exit 1
       fi
+      if [ -z "${2-}" ]; then
+        echo -e "${RED}Error: --target requires a value (home, project, or an absolute path)${NC}"
+        exit 1
+      fi
       case "$2" in
         home)
           INSTALL_DIR="$HOME/.claude"
