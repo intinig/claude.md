@@ -45,7 +45,7 @@ INSTALL_AGENTS=true
 INSTALL_OPENCODE=false
 BASE_URL="https://raw.githubusercontent.com/intinig/claude.md"
 
-# Installation directory (can be overridden with --target or CLAUDE_INSTALL_DIR env var)
+# Installation directory (default: $HOME/.claude; can be overridden by CLAUDE_INSTALL_DIR env var, and further overridden by --target flag)
 INSTALL_DIR="${CLAUDE_INSTALL_DIR:-$HOME/.claude}"
 
 # Language selection (empty = all languages)
@@ -99,6 +99,10 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --target)
+      if [ -z "${2-}" ]; then
+        echo -e "${RED}Error: --target requires a value (home, project, or an absolute path)${NC}"
+        exit 1
+      fi
       case "$2" in
         home)
           INSTALL_DIR="$HOME/.claude"
@@ -108,10 +112,19 @@ while [[ $# -gt 0 ]]; do
           ;;
         /*)
           # Absolute path
+          TARGET_PARENT="$(dirname "$2")"
+          if [ ! -d "$TARGET_PARENT" ]; then
+            echo -e "${RED}Error: Parent directory '$TARGET_PARENT' does not exist for target '$2'${NC}"
+            exit 1
+          fi
+          if [ ! -w "$TARGET_PARENT" ]; then
+            echo -e "${RED}Error: Parent directory '$TARGET_PARENT' is not writable. Cannot install to '$2'${NC}"
+            exit 1
+          fi
           INSTALL_DIR="$2"
           ;;
         *)
-          echo -e "${RED}Error: --target requires 'home', 'project', or an absolute path${NC}"
+          echo -e "${RED}Error: --target requires 'home', 'project', or an absolute path (starting with /)${NC}"
           exit 1
           ;;
       esac
@@ -143,7 +156,7 @@ Options:
   --help, -h           Show this help message
 
 Environment Variables:
-  CLAUDE_INSTALL_DIR   Override default installation directory
+  CLAUDE_INSTALL_DIR   Override default installation directory (overridden by --target if both are set)
 
 Supported Languages:
   typescript (ts)      TypeScript/JavaScript + React
@@ -269,10 +282,16 @@ get_lang_display() {
   fi
 }
 
+# Prepare display value for INSTALL_DIR, truncating if too long to keep banner aligned
+TARGET_DISPLAY="$INSTALL_DIR"
+if ((${#TARGET_DISPLAY} > 50)); then
+  TARGET_DISPLAY="${TARGET_DISPLAY:0:47}..."
+fi
+
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║  CLAUDE.md Development Framework Installer                 ║${NC}"
 printf "${BLUE}║  Version: %-49s║${NC}\n" "$VERSION"
-printf "${BLUE}║  Target: %-50s║${NC}\n" "$INSTALL_DIR"
+printf "${BLUE}║  Target: %-50s║${NC}\n" "$TARGET_DISPLAY"
 printf "${BLUE}║  Languages: %-47s║${NC}\n" "$(get_lang_display)"
 echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
