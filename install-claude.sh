@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 #
-# Install CLAUDE.md development framework to ~/.claude/
+# Install CLAUDE.md development framework to "$INSTALL_DIR"/
 #
 # Usage:
-#   ./install-claude.sh                    # Install everything (all languages)
+#   ./install-claude.sh                    # Install everything to ~/.claude/ (default)
+#   ./install-claude.sh --target project   # Install to ./.claude/ (current directory)
+#   ./install-claude.sh --target /path     # Install to custom absolute path
 #   ./install-claude.sh --claude-only      # Install only CLAUDE.md
 #   ./install-claude.sh --no-agents        # Install without agents
 #   ./install-claude.sh --skills-only      # Install only skills
@@ -42,6 +44,9 @@ INSTALL_COMMANDS=true
 INSTALL_AGENTS=true
 INSTALL_OPENCODE=false
 BASE_URL="https://raw.githubusercontent.com/intinig/claude.md"
+
+# Installation directory (default: $HOME/.claude; can be overridden by CLAUDE_INSTALL_DIR env var, and further overridden by --target flag)
+INSTALL_DIR="${CLAUDE_INSTALL_DIR:-$HOME/.claude}"
 
 # Language selection (empty = all languages)
 LANGUAGES=""
@@ -93,14 +98,63 @@ while [[ $# -gt 0 ]]; do
       VERSION="$2"
       shift 2
       ;;
+    --target)
+      if [ -z "${2-}" ]; then
+        echo -e "${RED}Error: --target requires a value (home, project, or an absolute path)${NC}"
+        exit 1
+      fi
+      if [ -z "${2-}" ]; then
+        echo -e "${RED}Error: --target requires a value (home, project, or an absolute path)${NC}"
+        exit 1
+      fi
+      case "$2" in
+        home)
+          INSTALL_DIR="$HOME/.claude"
+          ;;
+        project)
+          INSTALL_DIR="$PWD/.claude"
+          ;;
+        /*)
+          # Absolute path
+          TARGET_PARENT="$(dirname "$2")"
+          if [ ! -d "$TARGET_PARENT" ]; then
+            echo -e "${RED}Error: Parent directory '$TARGET_PARENT' does not exist for target '$2'${NC}"
+            exit 1
+          fi
+          if [ ! -w "$TARGET_PARENT" ]; then
+            echo -e "${RED}Error: Parent directory '$TARGET_PARENT' is not writable. Cannot install to '$2'${NC}"
+            exit 1
+          fi
+          TARGET_PARENT="$(dirname "$2")"
+          if [ ! -d "$TARGET_PARENT" ]; then
+            echo -e "${RED}Error: Parent directory '$TARGET_PARENT' does not exist for target '$2'${NC}"
+            exit 1
+          fi
+          if [ ! -w "$TARGET_PARENT" ]; then
+            echo -e "${RED}Error: Parent directory '$TARGET_PARENT' is not writable. Cannot install to '$2'${NC}"
+            exit 1
+          fi
+          INSTALL_DIR="$2"
+          ;;
+        *)
+          echo -e "${RED}Error: --target requires 'home', 'project', or an absolute path (starting with /)${NC}"
+          exit 1
+          ;;
+      esac
+      shift 2
+      ;;
     --help|-h)
       cat << EOF
-Install CLAUDE.md development framework to ~/.claude/
+Install CLAUDE.md development framework
 
 Usage:
   $0 [OPTIONS]
 
 Options:
+  --target TARGET      Installation target (default: home)
+                       home    - Install to ~/.claude/ (global)
+                       project - Install to ./.claude/ (current directory)
+                       /path   - Install to custom absolute path
   --claude-only        Install only CLAUDE.md
   --no-agents          Install without agents
   --skills-only        Install only skills
@@ -114,6 +168,9 @@ Options:
   --version VERSION    Install specific version (default: main)
   --help, -h           Show this help message
 
+Environment Variables:
+  CLAUDE_INSTALL_DIR   Override default installation directory (overridden by --target if both are set)
+
 Supported Languages:
   typescript (ts)      TypeScript/JavaScript + React
   go                   Go/Golang
@@ -122,8 +179,14 @@ Supported Languages:
   unity                Unity game engine (includes C# support)
 
 Examples:
-  # Install everything (all languages)
+  # Install everything (all languages) to ~/.claude/
   $0
+
+  # Install to current project directory
+  $0 --target project
+
+  # Install to custom path
+  $0 --target /opt/claude
 
   # Install only Go support
   $0 --lang go
@@ -139,6 +202,9 @@ Examples:
 
   # One-liner installation (all languages)
   curl -fsSL https://raw.githubusercontent.com/intinig/claude.md/main/install-claude.sh | bash
+
+  # One-liner for project-local install
+  curl -fsSL https://raw.githubusercontent.com/intinig/claude.md/main/install-claude.sh | bash -s -- --target project
 
   # One-liner for specific language
   curl -fsSL https://raw.githubusercontent.com/intinig/claude.md/main/install-claude.sh | bash -s -- --lang csharp
@@ -229,9 +295,16 @@ get_lang_display() {
   fi
 }
 
+# Prepare display value for INSTALL_DIR, truncating if too long to keep banner aligned
+TARGET_DISPLAY="$INSTALL_DIR"
+if ((${#TARGET_DISPLAY} > 50)); then
+  TARGET_DISPLAY="${TARGET_DISPLAY:0:47}..."
+fi
+
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║  CLAUDE.md Development Framework Installer                 ║${NC}"
 printf "${BLUE}║  Version: %-49s║${NC}\n" "$VERSION"
+printf "${BLUE}║  Target: %-50s║${NC}\n" "$TARGET_DISPLAY"
 printf "${BLUE}║  Languages: %-47s║${NC}\n" "$(get_lang_display)"
 echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
@@ -266,54 +339,54 @@ backup_file() {
 
 # Create directories
 echo -e "${BLUE}Creating directories...${NC}"
-mkdir -p ~/.claude/agents ~/.claude/skills ~/.claude/commands
+mkdir -p "$INSTALL_DIR/agents" "$INSTALL_DIR/skills" "$INSTALL_DIR/commands"
 
 # Core skills directories (always needed)
-mkdir -p ~/.claude/skills/tdd
-mkdir -p ~/.claude/skills/testing
-mkdir -p ~/.claude/skills/functional
-mkdir -p ~/.claude/skills/refactoring
-mkdir -p ~/.claude/skills/expectations
-mkdir -p ~/.claude/skills/planning
-mkdir -p ~/.claude/skills/mutation-testing
+mkdir -p "$INSTALL_DIR/skills/tdd"
+mkdir -p "$INSTALL_DIR/skills/testing"
+mkdir -p "$INSTALL_DIR/skills/functional"
+mkdir -p "$INSTALL_DIR/skills/refactoring"
+mkdir -p "$INSTALL_DIR/skills/expectations"
+mkdir -p "$INSTALL_DIR/skills/planning"
+mkdir -p "$INSTALL_DIR/skills/mutation-testing"
 
 # TypeScript directories
 if should_install_lang "typescript"; then
-  mkdir -p ~/.claude/skills/typescript-strict
-  mkdir -p ~/.claude/skills/front-end-testing
-  mkdir -p ~/.claude/skills/react-testing
+  mkdir -p "$INSTALL_DIR/skills/typescript-strict"
+  mkdir -p "$INSTALL_DIR/skills/front-end-testing"
+  mkdir -p "$INSTALL_DIR/skills/react-testing"
 fi
 
 # Go directories
 if should_install_lang "go"; then
-  mkdir -p ~/.claude/skills/go-strict
-  mkdir -p ~/.claude/skills/go-testing
-  mkdir -p ~/.claude/skills/go-error-handling
-  mkdir -p ~/.claude/skills/go-concurrency
+  mkdir -p "$INSTALL_DIR/skills/go-strict"
+  mkdir -p "$INSTALL_DIR/skills/go-testing"
+  mkdir -p "$INSTALL_DIR/skills/go-error-handling"
+  mkdir -p "$INSTALL_DIR/skills/go-concurrency"
 fi
 
 # Rust directories
 if should_install_lang "rust"; then
-  mkdir -p ~/.claude/skills/rust-strict
-  mkdir -p ~/.claude/skills/rust-testing
-  mkdir -p ~/.claude/skills/rust-error-handling
-  mkdir -p ~/.claude/skills/rust-concurrency
+  mkdir -p "$INSTALL_DIR/skills/rust-strict"
+  mkdir -p "$INSTALL_DIR/skills/rust-testing"
+  mkdir -p "$INSTALL_DIR/skills/rust-error-handling"
+  mkdir -p "$INSTALL_DIR/skills/rust-concurrency"
 fi
 
 # C# directories
 if should_install_lang "csharp"; then
-  mkdir -p ~/.claude/skills/csharp-strict
-  mkdir -p ~/.claude/skills/csharp-testing
-  mkdir -p ~/.claude/skills/csharp-error-handling
-  mkdir -p ~/.claude/skills/csharp-concurrency
+  mkdir -p "$INSTALL_DIR/skills/csharp-strict"
+  mkdir -p "$INSTALL_DIR/skills/csharp-testing"
+  mkdir -p "$INSTALL_DIR/skills/csharp-error-handling"
+  mkdir -p "$INSTALL_DIR/skills/csharp-concurrency"
 fi
 
 # Unity directories
 if should_install_lang "unity"; then
-  mkdir -p ~/.claude/skills/unity-strict
-  mkdir -p ~/.claude/skills/unity-testing
-  mkdir -p ~/.claude/skills/unity-patterns
-  mkdir -p ~/.claude/skills/unity-performance
+  mkdir -p "$INSTALL_DIR/skills/unity-strict"
+  mkdir -p "$INSTALL_DIR/skills/unity-testing"
+  mkdir -p "$INSTALL_DIR/skills/unity-patterns"
+  mkdir -p "$INSTALL_DIR/skills/unity-performance"
 fi
 
 echo -e "${GREEN}✓${NC} Directories created"
@@ -322,10 +395,10 @@ echo ""
 # Install CLAUDE.md
 if [[ "$INSTALL_CLAUDE" == true ]]; then
   echo -e "${BLUE}Installing CLAUDE.md...${NC}"
-  backup_file ~/.claude/CLAUDE.md
+  backup_file "$INSTALL_DIR"/CLAUDE.md
   download_file \
     "$BASE_URL/$VERSION/claude/.claude/CLAUDE.md" \
-    ~/.claude/CLAUDE.md \
+    "$INSTALL_DIR"/CLAUDE.md \
     "CLAUDE.md"
   echo ""
 fi
@@ -347,10 +420,10 @@ if [[ "$INSTALL_SKILLS" == true ]]; then
 
   echo -e "${PURPLE}  Core skills (language-agnostic)${NC}"
   for skill in "${core_skills[@]}"; do
-    backup_file ~/.claude/skills/"$skill"
+    backup_file "$INSTALL_DIR"/skills/"$skill"
     download_file \
       "$BASE_URL/$VERSION/claude/.claude/skills/$skill" \
-      ~/.claude/skills/"$skill" \
+      "$INSTALL_DIR"/skills/"$skill" \
       "skills/$skill"
   done
 
@@ -364,10 +437,10 @@ if [[ "$INSTALL_SKILLS" == true ]]; then
       "react-testing/SKILL.md"
     )
     for skill in "${ts_skills[@]}"; do
-      backup_file ~/.claude/skills/"$skill"
+      backup_file "$INSTALL_DIR"/skills/"$skill"
       download_file \
         "$BASE_URL/$VERSION/claude/.claude/skills/$skill" \
-        ~/.claude/skills/"$skill" \
+        "$INSTALL_DIR"/skills/"$skill" \
         "skills/$skill"
     done
   fi
@@ -383,10 +456,10 @@ if [[ "$INSTALL_SKILLS" == true ]]; then
       "go-concurrency/SKILL.md"
     )
     for skill in "${go_skills[@]}"; do
-      backup_file ~/.claude/skills/"$skill"
+      backup_file "$INSTALL_DIR"/skills/"$skill"
       download_file \
         "$BASE_URL/$VERSION/claude/.claude/skills/$skill" \
-        ~/.claude/skills/"$skill" \
+        "$INSTALL_DIR"/skills/"$skill" \
         "skills/$skill"
     done
   fi
@@ -402,10 +475,10 @@ if [[ "$INSTALL_SKILLS" == true ]]; then
       "rust-concurrency/SKILL.md"
     )
     for skill in "${rust_skills[@]}"; do
-      backup_file ~/.claude/skills/"$skill"
+      backup_file "$INSTALL_DIR"/skills/"$skill"
       download_file \
         "$BASE_URL/$VERSION/claude/.claude/skills/$skill" \
-        ~/.claude/skills/"$skill" \
+        "$INSTALL_DIR"/skills/"$skill" \
         "skills/$skill"
     done
   fi
@@ -421,10 +494,10 @@ if [[ "$INSTALL_SKILLS" == true ]]; then
       "csharp-concurrency/SKILL.md"
     )
     for skill in "${csharp_skills[@]}"; do
-      backup_file ~/.claude/skills/"$skill"
+      backup_file "$INSTALL_DIR"/skills/"$skill"
       download_file \
         "$BASE_URL/$VERSION/claude/.claude/skills/$skill" \
-        ~/.claude/skills/"$skill" \
+        "$INSTALL_DIR"/skills/"$skill" \
         "skills/$skill"
     done
   fi
@@ -440,10 +513,10 @@ if [[ "$INSTALL_SKILLS" == true ]]; then
       "unity-performance/SKILL.md"
     )
     for skill in "${unity_skills[@]}"; do
-      backup_file ~/.claude/skills/"$skill"
+      backup_file "$INSTALL_DIR"/skills/"$skill"
       download_file \
         "$BASE_URL/$VERSION/claude/.claude/skills/$skill" \
-        ~/.claude/skills/"$skill" \
+        "$INSTALL_DIR"/skills/"$skill" \
         "skills/$skill"
     done
   fi
@@ -460,10 +533,10 @@ if [[ "$INSTALL_COMMANDS" == true ]]; then
   )
 
   for cmd in "${commands[@]}"; do
-    backup_file ~/.claude/commands/"$cmd"
+    backup_file "$INSTALL_DIR"/commands/"$cmd"
     download_file \
       "$BASE_URL/$VERSION/claude/.claude/commands/$cmd" \
-      ~/.claude/commands/"$cmd" \
+      "$INSTALL_DIR"/commands/"$cmd" \
       "commands/$cmd"
   done
   echo ""
@@ -488,10 +561,10 @@ if [[ "$INSTALL_AGENTS" == true ]]; then
 
   echo -e "${PURPLE}  Core agents${NC}"
   for agent in "${core_agents[@]}"; do
-    backup_file ~/.claude/agents/"$agent"
+    backup_file "$INSTALL_DIR"/agents/"$agent"
     download_file \
       "$BASE_URL/$VERSION/claude/.claude/agents/$agent" \
-      ~/.claude/agents/"$agent" \
+      "$INSTALL_DIR"/agents/"$agent" \
       "agents/$agent"
   done
 
@@ -499,10 +572,10 @@ if [[ "$INSTALL_AGENTS" == true ]]; then
   if should_install_lang "typescript"; then
     echo ""
     echo -e "${YELLOW}  TypeScript enforcer${NC}"
-    backup_file ~/.claude/agents/ts-enforcer.md
+    backup_file "$INSTALL_DIR"/agents/ts-enforcer.md
     download_file \
       "$BASE_URL/$VERSION/claude/.claude/agents/ts-enforcer.md" \
-      ~/.claude/agents/ts-enforcer.md \
+      "$INSTALL_DIR"/agents/ts-enforcer.md \
       "agents/ts-enforcer.md"
   fi
 
@@ -510,10 +583,10 @@ if [[ "$INSTALL_AGENTS" == true ]]; then
   if should_install_lang "go"; then
     echo ""
     echo -e "${CYAN}  Go enforcer${NC}"
-    backup_file ~/.claude/agents/go-enforcer.md
+    backup_file "$INSTALL_DIR"/agents/go-enforcer.md
     download_file \
       "$BASE_URL/$VERSION/claude/.claude/agents/go-enforcer.md" \
-      ~/.claude/agents/go-enforcer.md \
+      "$INSTALL_DIR"/agents/go-enforcer.md \
       "agents/go-enforcer.md"
   fi
 
@@ -521,10 +594,10 @@ if [[ "$INSTALL_AGENTS" == true ]]; then
   if should_install_lang "rust"; then
     echo ""
     echo -e "${RED}  Rust enforcer${NC}"
-    backup_file ~/.claude/agents/rust-enforcer.md
+    backup_file "$INSTALL_DIR"/agents/rust-enforcer.md
     download_file \
       "$BASE_URL/$VERSION/claude/.claude/agents/rust-enforcer.md" \
-      ~/.claude/agents/rust-enforcer.md \
+      "$INSTALL_DIR"/agents/rust-enforcer.md \
       "agents/rust-enforcer.md"
   fi
 
@@ -532,10 +605,10 @@ if [[ "$INSTALL_AGENTS" == true ]]; then
   if should_install_lang "csharp"; then
     echo ""
     echo -e "${PURPLE}  C# enforcer${NC}"
-    backup_file ~/.claude/agents/csharp-enforcer.md
+    backup_file "$INSTALL_DIR"/agents/csharp-enforcer.md
     download_file \
       "$BASE_URL/$VERSION/claude/.claude/agents/csharp-enforcer.md" \
-      ~/.claude/agents/csharp-enforcer.md \
+      "$INSTALL_DIR"/agents/csharp-enforcer.md \
       "agents/csharp-enforcer.md"
   fi
 
@@ -543,10 +616,10 @@ if [[ "$INSTALL_AGENTS" == true ]]; then
   if should_install_lang "unity"; then
     echo ""
     echo -e "${CYAN}  Unity enforcer${NC}"
-    backup_file ~/.claude/agents/unity-enforcer.md
+    backup_file "$INSTALL_DIR"/agents/unity-enforcer.md
     download_file \
       "$BASE_URL/$VERSION/claude/.claude/agents/unity-enforcer.md" \
-      ~/.claude/agents/unity-enforcer.md \
+      "$INSTALL_DIR"/agents/unity-enforcer.md \
       "agents/unity-enforcer.md"
   fi
 
@@ -572,7 +645,7 @@ echo -e "${GREEN}╚════════════════════
 echo ""
 
 # Show what was installed
-echo -e "${BLUE}Installed to ~/.claude/${NC}"
+echo -e "${BLUE}Installed to ${INSTALL_DIR}/${NC}"
 echo ""
 
 if [[ "$INSTALL_CLAUDE" == true ]]; then
@@ -658,7 +731,7 @@ echo ""
 echo -e "${BLUE}Next steps:${NC}"
 echo ""
 echo -e "  1. Verify installation:"
-echo -e "     ${YELLOW}ls -la ~/.claude/${NC}"
+echo -e "     ${YELLOW}ls -la ${INSTALL_DIR}/${NC}"
 echo ""
 echo -e "  2. Test with Claude Code:"
 echo -e "     Open any project and use: ${YELLOW}/memory${NC}"
@@ -666,7 +739,7 @@ echo ""
 
 if [[ "$INSTALL_AGENTS" == true ]]; then
   echo -e "  3. Learn about agents:"
-  echo -e "     ${YELLOW}cat ~/.claude/agents/README.md${NC}"
+  echo -e "     ${YELLOW}cat ${INSTALL_DIR}/agents/README.md${NC}"
   echo ""
 fi
 
