@@ -100,11 +100,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --target)
       if [ -z "${2-}" ]; then
-        echo -e "${RED}Error: --target requires a value (home, project, or an absolute path)${NC}"
-        exit 1
-      fi
-      if [ -z "${2-}" ]; then
-        echo -e "${RED}Error: --target requires a value (home, project, or an absolute path)${NC}"
+        echo -e "${RED}Error: --target requires a value (home, project, or a path)${NC}"
         exit 1
       fi
       case "$2" in
@@ -114,31 +110,23 @@ while [[ $# -gt 0 ]]; do
         project)
           INSTALL_DIR="$PWD/.claude"
           ;;
-        /*)
-          # Absolute path
-          TARGET_PARENT="$(dirname "$2")"
-          if [ ! -d "$TARGET_PARENT" ]; then
-            echo -e "${RED}Error: Parent directory '$TARGET_PARENT' does not exist for target '$2'${NC}"
-            exit 1
-          fi
-          if [ ! -w "$TARGET_PARENT" ]; then
-            echo -e "${RED}Error: Parent directory '$TARGET_PARENT' is not writable. Cannot install to '$2'${NC}"
-            exit 1
-          fi
-          TARGET_PARENT="$(dirname "$2")"
-          if [ ! -d "$TARGET_PARENT" ]; then
-            echo -e "${RED}Error: Parent directory '$TARGET_PARENT' does not exist for target '$2'${NC}"
-            exit 1
-          fi
-          if [ ! -w "$TARGET_PARENT" ]; then
-            echo -e "${RED}Error: Parent directory '$TARGET_PARENT' is not writable. Cannot install to '$2'${NC}"
-            exit 1
-          fi
-          INSTALL_DIR="$2"
-          ;;
         *)
-          echo -e "${RED}Error: --target requires 'home', 'project', or an absolute path (starting with /)${NC}"
-          exit 1
+          # Convert relative paths to absolute paths
+          if [[ "$2" = /* ]]; then
+            INSTALL_DIR="$2"
+          else
+            INSTALL_DIR="$PWD/$2"
+          fi
+          # Validate parent directory exists and is writable
+          TARGET_PARENT="$(dirname "$INSTALL_DIR")"
+          if [ ! -d "$TARGET_PARENT" ]; then
+            echo -e "${RED}Error: Parent directory '$TARGET_PARENT' does not exist for target '$INSTALL_DIR'${NC}"
+            exit 1
+          fi
+          if [ ! -w "$TARGET_PARENT" ]; then
+            echo -e "${RED}Error: Parent directory '$TARGET_PARENT' is not writable. Cannot install to '$INSTALL_DIR'${NC}"
+            exit 1
+          fi
           ;;
       esac
       shift 2
@@ -154,7 +142,7 @@ Options:
   --target TARGET      Installation target (default: home)
                        home    - Install to ~/.claude/ (global)
                        project - Install to ./.claude/ (current directory)
-                       /path   - Install to custom absolute path
+                       PATH    - Install to custom path (absolute or relative)
   --claude-only        Install only CLAUDE.md
   --no-agents          Install without agents
   --skills-only        Install only skills
