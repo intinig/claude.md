@@ -121,6 +121,7 @@ Supported Languages:
     rust               Rust
     csharp (cs)        C#/.NET
     unity              Unity game engine (includes C# support)
+    php (laravel)      PHP/Laravel
 
 Examples:
     # Install everything (all languages)
@@ -219,11 +220,12 @@ function Get-NormalizedLanguages {
                 $normalized += "unity"
                 $normalized += "csharp"  # Unity includes C#
             }
+            { $_ -in "php", "laravel" } { $normalized += "php" }
             "all" { return @() }  # Empty = all languages
             "" { }  # Skip empty
             default {
                 Write-ColorOutput "Error: Unknown language '$lang'" -Color Red
-                Write-ColorOutput "Supported languages: typescript, go, rust, csharp, unity" -Color Yellow
+                Write-ColorOutput "Supported languages: typescript, go, rust, csharp, unity, php" -Color Yellow
                 exit 1
             }
         }
@@ -364,6 +366,15 @@ if (Test-ShouldInstallLang "unity") {
         (Join-Path $ClaudeDir "skills\unity-testing"),
         (Join-Path $ClaudeDir "skills\unity-patterns"),
         (Join-Path $ClaudeDir "skills\unity-performance")
+    )
+}
+
+# PHP directories
+if (Test-ShouldInstallLang "php") {
+    $directories += @(
+        (Join-Path $ClaudeDir "skills\php-strict"),
+        (Join-Path $ClaudeDir "skills\php-testing"),
+        (Join-Path $ClaudeDir "skills\php-error-handling")
     )
 }
 
@@ -513,6 +524,25 @@ if ($InstallSkills) {
         }
     }
 
+    # PHP skills
+    if (Test-ShouldInstallLang "php") {
+        Write-Host ""
+        Write-ColorOutput "  PHP skills" -Color Magenta
+        $phpSkills = @(
+            "php-strict/SKILL.md",
+            "php-testing/SKILL.md",
+            "php-error-handling/SKILL.md"
+        )
+        foreach ($skill in $phpSkills) {
+            $destPath = Join-Path $ClaudeDir "skills\$skill"
+            Backup-File -FilePath $destPath
+            Get-RemoteFile `
+                -Url "$BaseUrl/$Version/claude/.claude/skills/$skill" `
+                -Destination $destPath `
+                -Description "skills/$skill"
+        }
+    }
+
     Write-Host ""
 }
 
@@ -619,6 +649,18 @@ if ($InstallAgents) {
             -Description "agents/unity-enforcer.md"
     }
 
+    # PHP enforcer
+    if (Test-ShouldInstallLang "php") {
+        Write-Host ""
+        Write-ColorOutput "  PHP enforcer" -Color Magenta
+        $destPath = Join-Path $ClaudeDir "agents\php-enforcer.md"
+        Backup-File -FilePath $destPath
+        Get-RemoteFile `
+            -Url "$BaseUrl/$Version/claude/.claude/agents/php-enforcer.md" `
+            -Destination $destPath `
+            -Description "agents/php-enforcer.md"
+    }
+
     Write-Host ""
 }
 
@@ -687,6 +729,12 @@ if ($InstallSkills) {
         Write-ColorOutput "Unity" -Color DarkCyan -NoNewline
         Write-Host ": unity-strict, unity-testing, unity-patterns, unity-performance"
     }
+
+    if (Test-ShouldInstallLang "php") {
+        Write-ColorOutput "  ✓ " -Color Green -NoNewline
+        Write-ColorOutput "PHP" -Color Magenta -NoNewline
+        Write-Host ": php-strict, php-testing, php-error-handling"
+    }
 }
 
 if ($InstallCommands) {
@@ -727,6 +775,12 @@ if ($InstallAgents) {
         Write-ColorOutput "unity-enforcer" -Color DarkCyan -NoNewline
         Write-Host " (Unity best practices)"
     }
+
+    if (Test-ShouldInstallLang "php") {
+        Write-ColorOutput "  ✓ " -Color Green -NoNewline
+        Write-ColorOutput "php-enforcer" -Color Magenta -NoNewline
+        Write-Host " (PHP best practices)"
+    }
 }
 
 if ($InstallOpenCode) {
@@ -761,6 +815,8 @@ Write-ColorOutput "  C#          " -Color Magenta -NoNewline
 Write-Host "→ csharp-strict, csharp-testing, csharp-error-handling, csharp-concurrency"
 Write-ColorOutput "  Unity       " -Color DarkCyan -NoNewline
 Write-Host "→ unity-strict, unity-testing, unity-patterns, unity-performance (+ C#)"
+Write-ColorOutput "  PHP         " -Color Magenta -NoNewline
+Write-Host "→ php-strict, php-testing, php-error-handling"
 Write-Host ""
 
 Write-ColorOutput "Next steps:" -Color Blue

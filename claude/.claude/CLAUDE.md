@@ -1,18 +1,5 @@
 # Development Guidelines for Claude
 
-> **About this file (v3.3.0):** Lean version optimized for context efficiency. Core principles here; detailed patterns loaded on-demand via skills.
->
-> **Architecture:**
-> - **CLAUDE.md** (this file): Core philosophy + quick reference (~200 lines, always loaded)
-> - **Skills**: Detailed patterns loaded on-demand (language-agnostic + language-specific)
-> - **Agents**: Specialized subprocesses for verification and analysis
->
-> **Previous versions:**
-> - v3.2.0: Added Go and Rust support
-> - v3.0.0: TypeScript-only focus
-> - v2.0.0: Modular with @docs/ imports (~3000+ lines always loaded)
-> - v1.0.0: Single monolithic file (1,818 lines)
-
 ## Language Mode
 
 **Auto-detection** at session start:
@@ -21,7 +8,8 @@
 - `package.json` or `tsconfig.json` present → **TypeScript mode** (load: typescript-strict, react-testing, front-end-testing)
 - `*.csproj` or `*.sln` present (without Unity) → **C# mode** (load: csharp-strict, csharp-testing, csharp-error-handling, csharp-concurrency)
 - `Assets/` folder with `ProjectSettings/` or `*.unity` files → **Unity mode** (load: unity-strict, unity-testing, unity-patterns, unity-performance + all C# skills)
-- None found → **Ask user**: "What language is this project using? (Rust / Go / TypeScript / C# / Unity)"
+- `composer.json` present → **PHP mode** (load: php-strict, php-testing, php-error-handling)
+- None found → **Ask user**: "What language is this project using? (Rust / Go / TypeScript / C# / Unity / PHP)"
 
 Language mode determines which skills are automatically relevant and which enforcer agent to use.
 
@@ -88,6 +76,15 @@ I follow Test-Driven Development (TDD) with a strong emphasis on behavior-driven
 - No string-based methods (SendMessage, Invoke by string)
 - Use `[SerializeField]` for inspector fields (not public)
 - Tools: Unity Test Framework (Edit Mode + Play Mode)
+
+**PHP Mode:**
+- `declare(strict_types=1)` at file top
+- Type declarations on all parameters and returns
+- Property types, constructor property promotion
+- Constructor injection only (no service locator)
+- Small interfaces (1-3 methods), defined at consumer
+- Laravel: No Facades in services, Form Requests for validation
+- Tools: PHPUnit, PHPStan, PHP-CS-Fixer
 
 ## Testing Principles
 
@@ -185,6 +182,25 @@ For architecture patterns, load the `unity-patterns` skill.
 For performance optimization, load the `unity-performance` skill.
 For testing patterns, load the `unity-testing` skill.
 
+## PHP Guidelines
+
+**Core principle**: Strict types. Type declarations everywhere. Constructor injection.
+
+**Quick reference:**
+- `declare(strict_types=1)` at file top
+- Type declarations on all parameters and returns
+- Property types (PHP 7.4+), readonly properties (PHP 8.1+)
+- Constructor property promotion for DI
+- Small interfaces (1-3 methods), defined at consumer
+- Enums instead of string constants (PHP 8.1+)
+- Laravel: No Facades in domain/service code
+- Laravel: Form Requests for validation
+- Laravel: No `env()` outside config files
+
+For detailed PHP patterns, load the `php-strict` skill.
+For error handling patterns, load the `php-error-handling` skill.
+For testing patterns, load the `php-testing` skill.
+
 ## Code Style
 
 **Core principle**: Functional programming with immutable data. Self-documenting code.
@@ -261,6 +277,12 @@ For detailed guidance on expectations and documentation, load the `expectations`
 - [Script Execution Order](https://docs.unity3d.com/Manual/ExecutionOrder.html)
 - [ScriptableObject Architecture](https://unity.com/how-to/architect-game-code-scriptable-objects)
 - [Unity Performance Best Practices](https://docs.unity3d.com/Manual/BestPracticeGuides.html)
+
+**PHP:**
+- [PHP Manual](https://www.php.net/manual/)
+- [PHP The Right Way](https://phptherightway.com/)
+- [PSR Standards](https://www.php-fig.org/psr/)
+- [Laravel Documentation](https://laravel.com/docs)
 
 ## Summary
 

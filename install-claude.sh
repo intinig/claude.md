@@ -165,6 +165,7 @@ Supported Languages:
   rust                 Rust
   csharp (cs)          C#/.NET
   unity                Unity game engine (includes C# support)
+  php (laravel)        PHP/Laravel
 
 Examples:
   # Install everything (all languages) to ~/.claude/
@@ -237,12 +238,15 @@ normalize_languages() {
         # Unity includes C# automatically
         normalized="${normalized}unity,csharp,"
         ;;
+      php|laravel)
+        normalized="${normalized}php,"
+        ;;
       all|"")
         normalized="all,"
         ;;
       *)
         echo -e "${RED}Error: Unknown language '$lang'${NC}"
-        echo "Supported languages: typescript, go, rust, csharp, unity"
+        echo "Supported languages: typescript, go, rust, csharp, unity, php"
         exit 1
         ;;
     esac
@@ -377,6 +381,13 @@ if should_install_lang "unity"; then
   mkdir -p "$INSTALL_DIR/skills/unity-performance"
 fi
 
+# PHP directories
+if should_install_lang "php"; then
+  mkdir -p "$INSTALL_DIR/skills/php-strict"
+  mkdir -p "$INSTALL_DIR/skills/php-testing"
+  mkdir -p "$INSTALL_DIR/skills/php-error-handling"
+fi
+
 echo -e "${GREEN}✓${NC} Directories created"
 echo ""
 
@@ -509,6 +520,24 @@ if [[ "$INSTALL_SKILLS" == true ]]; then
     done
   fi
 
+  # PHP skills
+  if should_install_lang "php"; then
+    echo ""
+    echo -e "${PURPLE}  PHP skills${NC}"
+    php_skills=(
+      "php-strict/SKILL.md"
+      "php-testing/SKILL.md"
+      "php-error-handling/SKILL.md"
+    )
+    for skill in "${php_skills[@]}"; do
+      backup_file "$INSTALL_DIR"/skills/"$skill"
+      download_file \
+        "$BASE_URL/$VERSION/claude/.claude/skills/$skill" \
+        "$INSTALL_DIR"/skills/"$skill" \
+        "skills/$skill"
+    done
+  fi
+
   echo ""
 fi
 
@@ -611,6 +640,17 @@ if [[ "$INSTALL_AGENTS" == true ]]; then
       "agents/unity-enforcer.md"
   fi
 
+  # PHP enforcer
+  if should_install_lang "php"; then
+    echo ""
+    echo -e "${PURPLE}  PHP enforcer${NC}"
+    backup_file "$INSTALL_DIR"/agents/php-enforcer.md
+    download_file \
+      "$BASE_URL/$VERSION/claude/.claude/agents/php-enforcer.md" \
+      "$INSTALL_DIR"/agents/php-enforcer.md \
+      "agents/php-enforcer.md"
+  fi
+
   echo ""
 fi
 
@@ -662,6 +702,10 @@ if [[ "$INSTALL_SKILLS" == true ]]; then
   if should_install_lang "unity"; then
     echo -e "  ${GREEN}✓${NC} ${CYAN}Unity${NC}: unity-strict, unity-testing, unity-patterns, unity-performance"
   fi
+
+  if should_install_lang "php"; then
+    echo -e "  ${GREEN}✓${NC} ${PURPLE}PHP${NC}: php-strict, php-testing, php-error-handling"
+  fi
 fi
 
 if [[ "$INSTALL_COMMANDS" == true ]]; then
@@ -690,6 +734,10 @@ if [[ "$INSTALL_AGENTS" == true ]]; then
   if should_install_lang "unity"; then
     echo -e "  ${GREEN}✓${NC} ${CYAN}unity-enforcer${NC} (Unity best practices)"
   fi
+
+  if should_install_lang "php"; then
+    echo -e "  ${GREEN}✓${NC} ${PURPLE}php-enforcer${NC} (PHP best practices)"
+  fi
 fi
 
 if [[ "$INSTALL_OPENCODE" == true ]]; then
@@ -714,6 +762,7 @@ echo -e "  ${CYAN}Go${NC}          → go-strict, go-testing, go-error-handling,
 echo -e "  ${RED}Rust${NC}        → rust-strict, rust-testing, rust-error-handling, rust-concurrency"
 echo -e "  ${PURPLE}C#${NC}          → csharp-strict, csharp-testing, csharp-error-handling, csharp-concurrency"
 echo -e "  ${CYAN}Unity${NC}       → unity-strict, unity-testing, unity-patterns, unity-performance (+ C#)"
+echo -e "  ${PURPLE}PHP${NC}         → php-strict, php-testing, php-error-handling"
 echo ""
 
 echo -e "${BLUE}Next steps:${NC}"
